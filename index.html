@@ -1,0 +1,381 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>
+            Space Evaders Unblocked
+        </title>
+        <style>
+            *{ padding: 0; margin: 0; }
+            canvas {background: #000000; display: block; margin: 0 auto; }
+        </style>
+    </head>
+<body>
+    <p>Space Evaders Unblocked by gos</p>
+    <p></p>
+    <p>Right Arrow Key - Move Right</p>
+    <p>Left Arrow Key - Move Left</p>
+    <p>Z Key or Spacebar - Fire Gun</p>
+    <p></p>
+    <p>Avoid the aliens' bullets. Each time you get hit, you lose a life.</p>
+    <p>When you run out of lives, it's game over.</p>
+    <p>Shoot all of the aliens out of the sky with your gun.</p>
+    <p>You can take shelter beneath the green blocks.</p>
+    <canvas id = "gameCanvas" width = "1000" height = "650"></canvas>
+    <script>
+        alert("Click OK to start the game.");
+
+        var canvas = document.getElementById("gameCanvas");
+        var ctx = canvas.getContext("2d");
+
+        var playerWidth = 60;
+        var playerHeight = 20;
+        var playerX = 200-playerWidth/2;
+        var playerY = canvas.height-playerHeight;
+        var playerGunWidth = 10;
+        var playerGunHeight = 10;
+        var playerGunX = ((playerX+(playerWidth/2))-(playerGunWidth/2));
+        var playerGunY = canvas.height-playerHeight-playerGunHeight;
+		var playerColour = "#08fc04"; //"#08fc04"
+		
+        var bulletFiring = false;
+        var bulletFired = false;
+        var bulletSpeed = 7; //7
+        var playerBulletPosX = 0;
+        var playerBulletPosY = 0;
+        var score = 0;
+        var lives = 3;
+		var levelMultiplyer = 1;
+
+        var shelter1HP = 10;
+        var shelter2HP = 10;
+        var shelter3HP = 10;
+        var shelter4HP = 10;
+        var shelterWidth = 100;
+
+        var rightPressed = false;
+        var leftPressed = false;
+        var zPressed = false;
+
+        var globalInvaderX = 10;
+        var globalInvaderY = 10;
+        var invaderX = globalInvaderX;
+        var invaderY = globalInvaderY;
+        var invaderMovementSpeed = levelMultiplyer * 0.25;//0.3
+        var invadersAlive = 44;
+        var invadersAdvanceLevel = 0;
+        var deathX = 0;
+        var deathY = 0;
+        var invaderBulletFired = false;
+        var invaderBulletFiring = false;
+        var iX = 0;
+        var iY = 0;
+        var invaderBulletPosX = 0;
+        var invaderBulletPosY = 0;
+        var invaderBulletSpeed = 7; //7
+
+        var invaderArray = [
+            [30,30],
+            [80,30],
+            [130,30],
+            [180,30],
+            [230,30],
+            [280,30],
+            [330,30],
+            [380,30],
+            [430,30],
+            [480,30],
+            [530,30],
+            [30,90],
+            [80,90],
+            [130,90],
+            [180,90],
+            [230,90],
+            [280,90],
+            [330,90],
+            [380,90],
+            [430,90],
+            [480,90],
+            [530,90],
+            [30,150],
+            [80,150],
+            [130,150],
+            [180,150],
+            [230,150],
+            [280,150],
+            [330,150],
+            [380,150],
+            [430,150],
+            [480,150],
+            [530,150],
+            [30,210],
+            [80,210],
+            [130,210],
+            [180,210],
+            [230,210],
+            [280,210],
+            [330,210],
+            [380,210],
+            [430,210],
+            [480,210],
+            [530,210]
+        ];
+        function frame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayer();
+            drawInvaders();
+            drawShelters();
+            drawText();
+            if (invaderBulletFired === true){
+                drawInvaderBullet(0, 0);
+            }
+
+            playerBulletPosY -= bulletSpeed;
+
+            if (bulletFiring === true) {
+                bulletFired = true;
+                drawPlayerBullet();
+            }
+            if (invaderBulletFired === true){
+                invaderBulletPosY += invaderBulletSpeed;
+            }
+            if (invadersAdvanceLevel === 6) {
+                if (invadersAlive > 0) {
+                    alert("GAME OVER");
+					newGame();
+                    }
+                    if (invadersAlive === 0) {
+                        alert("YOU WIN");
+						levelMultiplyer += 1;
+						newGame();
+                    }
+            }
+            if (invadersAlive === 0) {
+                alert("YOU WIN");
+				levelMultiplyer += 1;
+				clearInterval(frame);
+				newGame();
+            }
+            if (lives === 0) {
+                alert("GAME OVER");
+				clearInterval(frame);
+				newGame();
+            }
+            if (rightPressed) {
+                playerX += 6;
+                playerGunX += 6;
+            }
+            if (leftPressed) {
+                playerX -= 6;
+                playerGunX -=6;
+            }
+            if (zPressed) {
+                bulletFiring = true;
+                drawPlayerBullet();
+            }
+            if (playerX < 0) {
+                playerX = 0;
+                playerGunX = ((playerX+(playerWidth/2))-(playerGunWidth/2));
+            }
+            if (playerX > canvas.width-playerWidth) {
+                playerX = canvas.width-playerWidth;
+                playerGunX = ((playerX+(playerWidth/2))-(playerGunWidth/2));
+            }
+        }
+        function drawText() {
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText("Score: "+ score, 8, 20);
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText("Lives: "+ lives, 8, 40);
+        }
+        function drawShelters() {
+            ctx.beginPath();
+            if (shelter1HP > 0) {ctx.rect(200-shelterWidth/2, canvas.height-100, shelterWidth, shelter1HP*3);}
+            if (shelter2HP > 0) {ctx.rect(400-shelterWidth/2, canvas.height-100, shelterWidth, shelter2HP*3);}
+            if (shelter3HP > 0) {ctx.rect(600-shelterWidth/2, canvas.height-100, shelterWidth, shelter3HP*3);}
+            if (shelter4HP > 0) {ctx.rect(800-shelterWidth/2, canvas.height-100, shelterWidth, shelter4HP*3);}
+            ctx.fillStyle = playerColour;
+            ctx.fill();
+            ctx.closePath();
+        }
+        function drawPlayer() {
+            ctx.beginPath();
+            ctx.rect(playerX, playerY, playerWidth, playerHeight);
+            ctx.rect(playerGunX, playerGunY, playerGunWidth, playerGunHeight);
+            ctx.fillStyle = playerColour;
+            ctx.fill();
+            ctx.closePath();
+        }
+        function drawInvaders() {
+            var invaderX = globalInvaderY;
+            var invaderY = globalInvaderY;
+            for (var x = 0; x < 44; x++) {
+                ctx.beginPath();
+                ctx.rect(invaderArray[x][0], invaderArray[x][1], 30, 30);
+                ctx.fillStyle = "#ffffff";
+                ctx.fill();
+                ctx.closePath();
+
+                if (playerBulletPosX >= invaderArray[x][0] && playerBulletPosX <= invaderArray[x][0]+30 && invaderArray[x][1]+30 >= playerBulletPosY && invaderArray[x][1] <= playerBulletPosY) {                        
+                    calculateScore(invaderArray[x][1]);
+                    invaderArray[x][0] = -1000000000
+                    invaderArray[x][1] = -1000000000
+                    bulletFiring = false;
+                    bulletFired = false;
+                    playerBulletPosX = -10000;
+                    invadersAlive -= 1;
+                }
+                if (playerBulletPosX+30 >= invaderArray[x][0] && playerBulletPosX+30 <= invaderArray[x][0]+30 && invaderArray[x][1]+30 >= playerBulletPosY && invaderArray[x][1] <= playerBulletPosY) {
+                    calculateScore(invaderArray[x][1]);
+                    invaderArray[x][0] = -1000000000
+                    invaderArray[x][1] = -1000000000
+                    bulletFiring = false;
+                    bulletFired = false;
+                    playerBulletPosX = -10000;
+                    invadersAlive -= 1;
+                }
+                if (playerBulletPosY <= 0) {
+                    bulletFiring = false;
+                    bulletFired = false;
+                }
+                
+                invaderArray[x][0] += invaderMovementSpeed;
+                
+                if (invaderArray[x][0]+30 >= canvas.width) {
+                    invaderMovementSpeed = invaderMovementSpeed-invaderMovementSpeed*2;
+                    invadersAdvanceLevel += 1;
+                    for (var i = 0; i < 44; i++) {
+                        invaderArray[i][1] += 60;
+                    }
+                }
+                
+                if (invaderArray[x][0] === 0) {
+                    invaderMovementSpeed = invaderMovementSpeed-invaderMovementSpeed-invaderMovementSpeed;
+                    invadersAdvanceLevel += 1;
+                    for (var i = 0; i < 44; i++) {
+                        invaderArray[i][1] += 60;
+                    }      
+                }
+                if (invaderBulletFired === false && invaderArray[x][0] > 0) {
+                    if (Math.floor((Math.random() * 10) + 1) === 1) {
+                        drawInvaderBullet(invaderArray[x][0], invaderArray[x][1]);
+                    }        
+                }
+            }
+        }
+        function calculateScore(deathY) {
+            if (deathY-60*invadersAdvanceLevel === 30) {
+                score += 30;
+            }
+            else if (deathY-60*invadersAdvanceLevel === 90) {
+                score += 20;
+            }
+            else if (deathY-60*invadersAdvanceLevel === 150 || deathY-deathY*invadersAdvanceLevel === 210) {
+                score += 10;
+            }
+        }
+        function drawInvaderBullet(iX, iY) {
+            ctx.beginPath();
+            if (invaderBulletFired === true) {
+                ctx.rect(invaderBulletPosX, invaderBulletPosY, 10, 30);
+                ctx.arc(invaderBulletPosX+5, invaderBulletPosY+30, 4, 0, Math.PI*2);
+            }
+            if (invaderBulletFired === false) {
+                invaderBulletPosX = iX+15
+                invaderBulletPosY = iY+30
+                ctx.rect(invaderBulletPosX, invaderBulletPosY, 10, 30);
+                invaderBulletFired = true;
+            }
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+            ctx.closePath();
+
+            if (invaderBulletPosX+5 >= 200-shelterWidth/2-5 && invaderBulletPosX+5 <= 200+shelterWidth/2+5 && invaderBulletPosY+30 > canvas.height-100 && shelter1HP > 0) {
+                shelter1HP -= 1;
+                invaderBulletFired = false;
+            }
+            if (invaderBulletPosX+5 >= 400-shelterWidth/2-5 && invaderBulletPosX+5 <= 400+shelterWidth/2+5 && invaderBulletPosY+30 > canvas.height-100 && shelter2HP > 0) {
+                shelter2HP -= 1;
+                invaderBulletFired = false;
+            }  
+            if (invaderBulletPosX+5 >= 600-shelterWidth/2-5 && invaderBulletPosX+5 <= 600+shelterWidth/2+5 && invaderBulletPosY+30 > canvas.height-100 && shelter3HP > 0) {
+                shelter3HP -= 1;
+                invaderBulletFired = false;
+            }
+            if (invaderBulletPosX+5 >= 800-shelterWidth/2-5 && invaderBulletPosX+5 <= 800+shelterWidth/2+5 && invaderBulletPosY+30 > canvas.height-100 && shelter4HP > 0) {
+                shelter4HP -= 1;
+                invaderBulletFired = false;
+            }
+            if (invaderBulletPosY > canvas.height && invaderBulletFired === true) {
+                invaderBulletFired = false;
+            }
+            if (invaderBulletPosX+playerGunWidth/2 >= playerX && invaderBulletPosX+playerGunWidth/2 <= playerX+playerWidth && invaderBulletPosY+30 >= canvas.height-playerHeight) {
+                lives -= 1;
+                invaderBulletFired = false;  
+            }
+        }
+        function drawPlayerBullet() {
+            if (bulletFiring === true) {
+                ctx.beginPath();
+                if (bulletFired === true) {
+                    ctx.rect(playerBulletPosX, playerBulletPosY, playerGunWidth, 30);
+                    ctx.arc(playerBulletPosX+5, playerBulletPosY, playerGunWidth/2, 0, Math.PI*2);
+                }
+                if (bulletFired === false) {
+                    playerBulletPosX = playerGunX;
+                    playerBulletPosY = playerGunY;
+                    ctx.rect(playerBulletPosX, playerGunY, playerGunWidth, 30);
+                    ctx.arc(playerBulletPosX+5, playerBulletPosY, playerGunWidth/2, 0, Math.PI*2);
+                }
+                ctx.fillStyle =playerColour;
+                ctx.fill();
+                ctx.closePath();
+            }
+            if (playerBulletPosX+playerGunWidth/2 >= 200-shelterWidth/2-playerGunWidth/2 && playerBulletPosX+playerGunWidth/2 <= 200+shelterWidth/2+playerGunWidth/2 && playerBulletPosY > canvas.height-70 && shelter1HP > 0) {
+                bulletFiring = false;
+                bulletFired = false;
+            }
+            if (playerBulletPosX+playerGunWidth/2 >= 400-shelterWidth/2-playerGunWidth/2 && playerBulletPosX+playerGunWidth/2 <= 400+shelterWidth/2+playerGunWidth/2 && playerBulletPosY > canvas.height-70 && shelter2HP > 0) {
+                bulletFiring = false;
+                bulletFired = false;
+            }
+            if (playerBulletPosX+playerGunWidth/2 >= 600-shelterWidth/2-playerGunWidth/2 && playerBulletPosX+playerGunWidth/2 <= 600+shelterWidth/2+playerGunWidth/2 && playerBulletPosY > canvas.height-70 && shelter3HP > 0) {
+                bulletFiring = false;
+                bulletFired = false;
+            }
+            if (playerBulletPosX+playerGunWidth/2 >= 800-shelterWidth/2-playerGunWidth/2 && playerBulletPosX+playerGunWidth/2 <= 800+shelterWidth/2+playerGunWidth/2 && playerBulletPosY > canvas.height-70 && shelter4HP > 0) {
+                bulletFiring = false;
+                bulletFired = false;
+            }
+        }
+        setInterval(frame, 10);
+        document.addEventListener("keydown", keyDownHandler, false);
+	    document.addEventListener("keyup", keyUpHandler, false);
+
+        function keyDownHandler(e) {
+            if(e.key === "Right" || e.key === "ArrowRight") {
+                rightPressed = true;
+            }
+            if (e.key === "Left" || e.key === "ArrowLeft") {
+                leftPressed = true;
+            }
+            if (e.key == "z" || e.keyCode === 32) {
+                zPressed = true;
+            }
+        }
+        function keyUpHandler(e) {
+            if(e.key === "Right" || e.key === "ArrowRight") {
+                rightPressed = false;
+            }
+            if (e.key === "Left" || e.key === "ArrowLeft") {
+                leftPressed = false;
+            }
+            if (e.key === "z" || e.keyCode === 32) {
+                zPressed = false;
+            }
+        }
+    </script>
+</body>
+</html>
